@@ -7,7 +7,7 @@
 - [ ] 流式传输
 
 ### 使用方法：
-在https://github.com/chatanywhere/GPT_API_free中申请免费API Key
+在 https://github.com/chatanywhere/GPT_API_free 中申请免费API Key
 在ChatRequestTask.java中修改
 ``` java
 private static final String OPENAI_API_KEY = "sk-xxxx";
