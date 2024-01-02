@@ -20,7 +20,7 @@ import okio.Okio;
 public class ChatRequestTask extends AsyncTask<String, Void, String> {
 
     private static final String TAG = "ChatRequestTask";
-    private static final String OPENAI_API_KEY = "sk-RpGW9F2sK5zRZFLYyRJ8xnQrepPmpUcnNl16qcIjQgZSkAkP";
+    private static final String OPENAI_API_KEY = "sk-xxx";
 
 //    private static final String API_ENDPOINT = "https://api.chatanywhere.com.cn/v1/chat/completions";
     private static final String API_ENDPOINT = "https://api.chatanywhere.tech/v1/chat/completions";
