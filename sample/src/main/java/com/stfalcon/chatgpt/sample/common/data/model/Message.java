@@ -40,7 +40,6 @@ public class Message implements IMessage,
         return text;
     }
 
-    @Override
     public void setText(String text) {
         this.text = text;
     }

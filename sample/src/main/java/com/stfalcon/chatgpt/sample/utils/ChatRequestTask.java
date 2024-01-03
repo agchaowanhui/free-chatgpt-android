@@ -23,7 +23,7 @@ import okio.Okio;
 public class ChatRequestTask extends AsyncTask<String, String, String> {
 
     private static final String TAG = "ChatRequestTask";
-    private static final String OPENAI_API_KEY = "sk-RpGW9F2sK5zRZFLYyRJ8xnQrepPmpUcnNl16qcIjQgZSkAkP";
+    private static final String OPENAI_API_KEY = "sk-xxxxxxxx";
 
 //    private static final String API_ENDPOINT = "https://api.chatanywhere.com.cn/v1/chat/completions";
     private static final String API_ENDPOINT = "https://api.chatanywhere.tech/v1/chat/completions";
@@ -35,6 +35,8 @@ public class ChatRequestTask extends AsyncTask<String, String, String> {
     private int pre_len = "data: ".length();
 
     public volatile static boolean isRunning = false;
+
+    public Message currentMessage;
 
 
     public ChatRequestTask(DemoMessagesActivity demoMessagesActivity){
@@ -81,9 +83,9 @@ public class ChatRequestTask extends AsyncTask<String, String, String> {
             if (responseCode == HttpURLConnection.HTTP_OK) {
 
                 // 给流式输出用的
-                Message message =  MessagesFixtures.getTextMessage("", 1);
+                this.currentMessage =  MessagesFixtures.getTextMessage("", 1);
 
-                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.addToStart(message, true));
+                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.addToStart(this.currentMessage, true));
 
                 InputStream inputStream = connection.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -129,7 +131,11 @@ public class ChatRequestTask extends AsyncTask<String, String, String> {
                     return;
                 }
                 Thread.sleep(1);
-                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.streamPrint(content, true));
+//                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.streamPrint(content, true));
+                content = this.currentMessage.getText() + content;
+                this.currentMessage.setText(content);
+
+                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.update(this.currentMessage));
             }
         } catch (Exception e) {
             Log.e(TAG, "onPostExecute: " + e.getMessage());
