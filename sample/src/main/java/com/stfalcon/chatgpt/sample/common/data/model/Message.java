@@ -41,6 +41,11 @@ public class Message implements IMessage,
     }
 
     @Override
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    @Override
     public Date getCreatedAt() {
         return createdAt;
     }
@@ -61,10 +66,6 @@ public class Message implements IMessage,
 
     public String getStatus() {
         return "Sent";
-    }
-
-    public void setText(String text) {
-        this.text = text;
     }
 
     public void setCreatedAt(Date createdAt) {

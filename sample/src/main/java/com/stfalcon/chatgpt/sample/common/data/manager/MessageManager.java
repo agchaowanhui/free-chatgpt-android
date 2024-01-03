@@ -36,6 +36,10 @@ public class MessageManager {
         return messagesArray;
     }
 
+    public void clear(){
+        messageHistory.clear();
+    }
+
     // 内部类定义消息结构
     public static class ChatgptMessage {
         private String role;

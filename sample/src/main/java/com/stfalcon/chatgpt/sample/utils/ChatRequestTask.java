@@ -8,6 +8,9 @@ import com.stfalcon.chatgpt.sample.common.data.manager.MessageManager;
 import com.stfalcon.chatgpt.sample.common.data.model.Message;
 import com.stfalcon.chatgpt.sample.features.demo.DemoMessagesActivity;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -17,10 +20,10 @@ import org.json.JSONObject;
 import okio.BufferedSource;
 import okio.Okio;
 
-public class ChatRequestTask extends AsyncTask<String, Void, String> {
+public class ChatRequestTask extends AsyncTask<String, String, String> {
 
     private static final String TAG = "ChatRequestTask";
-    private static final String OPENAI_API_KEY = "sk-xxx";
+    private static final String OPENAI_API_KEY = "sk-RpGW9F2sK5zRZFLYyRJ8xnQrepPmpUcnNl16qcIjQgZSkAkP";
 
 //    private static final String API_ENDPOINT = "https://api.chatanywhere.com.cn/v1/chat/completions";
     private static final String API_ENDPOINT = "https://api.chatanywhere.tech/v1/chat/completions";
@@ -28,6 +31,10 @@ public class ChatRequestTask extends AsyncTask<String, Void, String> {
     public DemoMessagesActivity messagesActivity;
 
     private MessageManager messageManager = MessageManager.getmessageManagerInstance();
+
+    private int pre_len = "data: ".length();
+
+    public volatile static boolean isRunning = false;
 
 
     public ChatRequestTask(DemoMessagesActivity demoMessagesActivity){
@@ -57,6 +64,8 @@ public class ChatRequestTask extends AsyncTask<String, Void, String> {
             jsonRequest.put("model", "gpt-3.5-turbo");
 
             jsonRequest.put("messages", messageManager.buildJson());
+            messageManager.clear();
+            jsonRequest.put("stream", true);
 
             String jsonRequestString = jsonRequest.toString();
             Log.d(TAG, "doInBackground: jsonRequestString: " + jsonRequestString);
@@ -70,37 +79,71 @@ public class ChatRequestTask extends AsyncTask<String, Void, String> {
             int responseCode = connection.getResponseCode();
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                BufferedSource source = Okio.buffer(Okio.source(connection.getInputStream()));
-                String responseBody = source.readUtf8();
-                source.close();
 
-                return responseBody;
+                // 给流式输出用的
+                Message message =  MessagesFixtures.getTextMessage("", 1);
+
+                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.addToStart(message, true));
+
+                InputStream inputStream = connection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // 发布进度以更新 UI
+                    publishProgress(line);
+                }
+                reader.close();
             } else {
-                return "Error: " + responseCode;
+                publishProgress("Error: " + responseCode);
             }
         } catch (Exception e) {
-            Log.e(TAG, "doInBackground: " + e.getMessage());
-            e.printStackTrace();
-            return "Error: " + e.getMessage();
+            Log.e(TAG, "doInBackground: " + e.getMessage(), e);
+            publishProgress("Error: " + e.getMessage());
         }
+        return null;
+    }
+
+    @Override
+    protected void onProgressUpdate(String... values) {
+        super.onProgressUpdate(values);
+        try {
+            if (values != null && values.length > 0) {
+                String line = values[0];
+                line = line.trim();
+                if(line.isEmpty() || (line.length() < pre_len)){
+                    return;
+                }
+                line = line.substring(pre_len);
+                if("[DONE]".equals(line)){
+                    return;
+                }
+                JSONObject jsonResult = new JSONObject(line);
+                JSONObject delta = jsonResult.getJSONArray("choices").getJSONObject(0).getJSONObject("delta");
+                Log.d(TAG, "onProgressUpdate: delta: " + delta);
+                if(delta.length() == 0){
+                    return;
+                }
+                String content = delta.getString("content").trim();
+                if(content.isEmpty()){
+                    return;
+                }
+                Thread.sleep(1);
+                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.streamPrint(content, true));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "onPostExecute: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+            // 在这里处理每一行数据，例如将其显示在 UI 上
+            // 你可以添加适当的逻辑来处理每一行数据
+
     }
 
     @Override
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
-        try {
-            Log.d(TAG, "onPostExecute: result: " + result);
-            JSONObject jsonResult = new JSONObject(result);
-            String content = jsonResult.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content");
-            messageManager.addChatgptMessage("assistant", content);
-            Message message =  MessagesFixtures.getTextMessage(content, 1);
-            messagesActivity.runOnUiThread(() -> {
-                messagesActivity.messagesAdapter.addToStart(message, true);
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "onPostExecute: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 }
 
