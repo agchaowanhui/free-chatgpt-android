@@ -23,7 +23,7 @@ import okio.Okio;
 public class ChatRequestTask extends AsyncTask<String, String, String> {
 
     private static final String TAG = "ChatRequestTask";
-    private static final String OPENAI_API_KEY = "sk-xxxxxxxx";
+    private static final String OPENAI_API_KEY = "sk-xxxx";
 
 //    private static final String API_ENDPOINT = "https://api.chatanywhere.com.cn/v1/chat/completions";
     private static final String API_ENDPOINT = "https://api.chatanywhere.tech/v1/chat/completions";
@@ -129,7 +129,7 @@ public class ChatRequestTask extends AsyncTask<String, String, String> {
                 String content = delta.getString("content").trim();
                 if(content.isEmpty()){
                     return;
-                });
+                }
 //                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.streamPrint(content, true));
                 content = this.currentMessage.getText() + content;
                 this.currentMessage.setText(content);
