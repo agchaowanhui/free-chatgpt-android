@@ -129,8 +129,7 @@ public class ChatRequestTask extends AsyncTask<String, String, String> {
                 String content = delta.getString("content").trim();
                 if(content.isEmpty()){
                     return;
-                }
-                Thread.sleep(1);
+                });
 //                messagesActivity.runOnUiThread(() -> messagesActivity.messagesAdapter.streamPrint(content, true));
                 content = this.currentMessage.getText() + content;
                 this.currentMessage.setText(content);
@@ -141,9 +140,6 @@ public class ChatRequestTask extends AsyncTask<String, String, String> {
             Log.e(TAG, "onPostExecute: " + e.getMessage());
             e.printStackTrace();
         }
-
-            // 在这里处理每一行数据，例如将其显示在 UI 上
-            // 你可以添加适当的逻辑来处理每一行数据
 
     }
 
